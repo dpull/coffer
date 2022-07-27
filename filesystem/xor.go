@@ -2,12 +2,9 @@ package filesystem
 
 import (
 	"context"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
-
 	"github.com/pkg/errors"
+	"os"
+	"path/filepath"
 
 	"golang.org/x/net/webdav"
 )
@@ -27,37 +24,15 @@ type xorFS struct {
 	key    []byte
 }
 
-// slashClean is equivalent to but slightly more efficient than
-// path.Clean("/" + name).
-func slashClean(name string) string {
-	if name == "" || name[0] != '/' {
-		name = "/" + name
-	}
-	return path.Clean(name)
-}
-
-func (fs *xorFS) resolve(name string) string {
-	// This implementation is based on Dir.Open's code in the standard net/http package.
-	if filepath.Separator != '/' && strings.IndexRune(name, filepath.Separator) >= 0 ||
-		strings.Contains(name, "\x00") {
-		return ""
-	}
-	dir := fs.folder
-	if dir == "" {
-		dir = "."
-	}
-	return filepath.Join(dir, filepath.FromSlash(slashClean(name)))
-}
-
 func (fs *xorFS) Mkdir(ctx context.Context, name string, perm os.FileMode) error {
-	if name = fs.resolve(name); name == "" {
+	if name = ResolvePath(fs.folder, name); name == "" {
 		return os.ErrNotExist
 	}
 	return os.Mkdir(name, perm)
 }
 
 func (fs *xorFS) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
-	if name = fs.resolve(name); name == "" {
+	if name = ResolvePath(fs.folder, name); name == "" {
 		return nil, os.ErrNotExist
 	}
 	f, err := os.OpenFile(name, flag, perm)
@@ -67,7 +42,7 @@ func (fs *xorFS) OpenFile(ctx context.Context, name string, flag int, perm os.Fi
 	return f, nil
 }
 func (fs *xorFS) RemoveAll(ctx context.Context, name string) error {
-	if name = fs.resolve(name); name == "" {
+	if name = ResolvePath(fs.folder, name); name == "" {
 		return os.ErrNotExist
 	}
 	if name == filepath.Clean(fs.folder) {
@@ -77,10 +52,10 @@ func (fs *xorFS) RemoveAll(ctx context.Context, name string) error {
 	return os.RemoveAll(name)
 }
 func (fs *xorFS) Rename(ctx context.Context, oldName, newName string) error {
-	if oldName = fs.resolve(oldName); oldName == "" {
+	if oldName = ResolvePath(fs.folder, oldName); oldName == "" {
 		return os.ErrNotExist
 	}
-	if newName = fs.resolve(newName); newName == "" {
+	if newName = ResolvePath(fs.folder, newName); newName == "" {
 		return os.ErrNotExist
 	}
 	if root := filepath.Clean(fs.folder); root == oldName || root == newName {
@@ -90,7 +65,7 @@ func (fs *xorFS) Rename(ctx context.Context, oldName, newName string) error {
 	return os.Rename(oldName, newName)
 }
 func (fs *xorFS) Stat(ctx context.Context, name string) (os.FileInfo, error) {
-	if name = fs.resolve(name); name == "" {
+	if name = ResolvePath(fs.folder, name); name == "" {
 		return nil, os.ErrNotExist
 	}
 	return os.Stat(name)
