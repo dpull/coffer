@@ -4,7 +4,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
 )
 
 // slashClean is equivalent to but slightly more efficient than
@@ -26,47 +25,4 @@ func ResolvePath(dir, name string) string {
 		dir = "."
 	}
 	return filepath.Join(dir, filepath.FromSlash(slashClean(name)))
-}
-
-var bufferPool *sync.Pool
-
-const defaultBufferSize = 64 * 1024
-const enableBufferPool = true
-
-func init() {
-	bufferPool = &sync.Pool{
-		New: func() interface{} {
-			return make([]byte, defaultBufferSize)
-		},
-	}
-}
-
-func AllocBuffer(size int) []byte {
-	if !enableBufferPool {
-		for {
-			if size > defaultBufferSize {
-				break
-			}
-
-			b, ok := bufferPool.Get().([]byte)
-			if !ok {
-				break
-			}
-			if cap(b) != defaultBufferSize {
-				panic("cap(b) < defaultBufferSize")
-			}
-			return b[0:size]
-		}
-	}
-	return make([]byte, size)
-}
-
-func FreeBuffer(b []byte) {
-	if !enableBufferPool {
-		return
-	}
-	if cap(b) != defaultBufferSize {
-		return
-	}
-	bufferPool.Put(b)
 }

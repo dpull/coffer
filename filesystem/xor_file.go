@@ -53,9 +53,7 @@ func (f *xorFile) Write(b []byte) (int, error) {
 		return 0, err
 	}
 
-	data := AllocBuffer(len(b))
-	defer FreeBuffer(data)
-
+	data := make([]byte, len(b))
 	copy(data, b)
 	xor(data, pos, f.key)
 	return f.fd.Write(data)

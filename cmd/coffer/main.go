@@ -45,7 +45,7 @@ var logPath = flag.String("l", "coffer.log", "log file")
 
 func main() {
 	flag.Parse()
-	startHttpProfile(8080)
+	// startHttpProfile(8080)
 
 	fd, err := initLog()
 	if err != nil {
