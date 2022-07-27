@@ -1,6 +1,7 @@
 package filesystem
 
 import (
+	"io"
 	"os"
 
 	"golang.org/x/net/webdav"
@@ -34,7 +35,7 @@ func xor(data []byte, offset int64, key []byte) {
 }
 
 func (f *xorFile) Read(b []byte) (int, error) {
-	pos, err := f.fd.Seek(0, 1)
+	pos, err := f.fd.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return 0, err
 	}

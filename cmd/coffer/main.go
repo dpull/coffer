@@ -32,7 +32,6 @@ func initLog() (*os.File, error) {
 }
 
 func readConfig(conf *config) error {
-
 	data, err := ioutil.ReadFile(*configPath)
 	if err != nil {
 		return err
@@ -77,7 +76,7 @@ func main() {
 		}
 	}()
 
-	ch := make(chan os.Signal)
+	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGSEGV)
 	<-ch
 }
