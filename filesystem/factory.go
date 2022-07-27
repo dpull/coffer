@@ -7,7 +7,7 @@ import (
 
 type createFn func(folder string, param map[string]string) (webdav.FileSystem, error)
 
-var factory map[string]createFn = make(map[string]createFn)
+var factory = make(map[string]createFn)
 
 func Register(fsType string, create createFn) {
 	factory[fsType] = create
